@@ -189,6 +189,36 @@ router.put("/:id/scores", async (req: Request, res: Response) => {
   }
 });
 
+// 경기 정보 수정 (코스명 등)
+router.patch("/:id", async (req: Request, res: Response) => {
+  try {
+    const gameId = parseInt(req.params.id as string);
+    const gameRepo = AppDataSource.getRepository(Game);
+
+    const game = await gameRepo.findOne({ where: { id: gameId } });
+    if (!game) {
+      return res.status(404).json({ error: "경기를 찾을 수 없습니다" });
+    }
+
+    const { courseName, gameDate, memo } = req.body;
+    if (courseName !== undefined) game.courseName = courseName;
+    if (gameDate !== undefined) game.gameDate = gameDate;
+    if (memo !== undefined) game.memo = memo;
+
+    await gameRepo.save(game);
+
+    const result = await gameRepo.findOne({
+      where: { id: gameId },
+      relations: ["gamePlayers", "gamePlayers.player"],
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "경기 정보 수정 실패" });
+  }
+});
+
 // 경기 삭제
 router.delete("/:id", async (req: Request, res: Response) => {
   try {

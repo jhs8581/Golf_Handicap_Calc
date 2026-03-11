@@ -34,6 +34,7 @@ export default function HandicapCalcPage({ players, settings, useLocalStorage, s
     }))
   );
   const [calculated, setCalculated] = useState(false);
+  const [courseName, setCourseName] = useState("");
 
   const activeSlots = slots.slice(0, slotCount);
 
@@ -110,7 +111,7 @@ export default function HandicapCalcPage({ players, settings, useLocalStorage, s
 
     const gameData = {
       gameDate,
-      courseName: "",
+      courseName,
       handicapRatio: settings.handicapRatio,
       roundingMethod: settings.roundingMethod,
       players: gamePlayers,
@@ -121,7 +122,7 @@ export default function HandicapCalcPage({ players, settings, useLocalStorage, s
         const localGame = {
           id: Date.now(),
           gameDate,
-          courseName: "",
+          courseName,
           handicapRatio: settings.handicapRatio,
           roundingMethod: settings.roundingMethod,
           createdAt: new Date().toISOString(),
@@ -298,6 +299,16 @@ export default function HandicapCalcPage({ players, settings, useLocalStorage, s
 
           {/* 오늘의 경기 등록 버튼 */}
           <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
+            <div style={{ marginBottom: "1rem", maxWidth: "300px", margin: "0 auto 1rem" }}>
+              <label style={{ display: "block", marginBottom: "0.25rem", fontSize: "0.9rem", fontWeight: 600 }}>골프장 (코스명)</label>
+              <input
+                className="form-control"
+                value={courseName}
+                onChange={(e) => setCourseName(e.target.value)}
+                placeholder="예: OO 컨트리클럽"
+                style={{ textAlign: "center" }}
+              />
+            </div>
             <button
               className="btn btn-primary"
               onClick={handleRegisterGame}

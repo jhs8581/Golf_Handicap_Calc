@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+const fs = require('fs');
+
+const content = `import { useState, useEffect, useCallback } from "react";
 import type { Player, Settings, Game } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
@@ -21,14 +23,13 @@ export default function GameResultsPage({
   const [games, setGames] = useState<Game[]>([]);
   const [editingGameId, setEditingGameId] = useState<number | null>(null);
   const [scores, setScores] = useState<Record<number, string>>({});
-  const [editingCourseName, setEditingCourseName] = useState<{ gameId: number; name: string } | null>(null);
 
   const loadGames = useCallback(() => {
     if (useLocalStorage) {
       const saved = localStorage.getItem(LOCAL_GAMES_KEY);
       if (saved) setGames(JSON.parse(saved));
     } else {
-      fetch(`${API_BASE}/games`)
+      fetch(\`\${API_BASE}/games\`)
         .then((r) => r.json())
         .then(setGames)
         .catch(() => setGames([]));
@@ -69,7 +70,7 @@ export default function GameResultsPage({
 
     const hasAnyScore = filledPlayers.some((p) => p.grossScore && p.grossScore > 0);
     if (!hasAnyScore) {
-      showToast("최소 한 명의 스코어를 입력해주세요.", "error");
+      showToast("\uCD5C\uC18C \uD55C \uBA85\uC758 \uC2A4\uCF54\uC5B4\uB97C \uC785\uB825\uD574\uC8FC\uC138\uC694.", "error");
       return;
     }
 
@@ -92,78 +93,53 @@ export default function GameResultsPage({
         });
         setGames(updatedGames);
         localStorage.setItem(LOCAL_GAMES_KEY, JSON.stringify(updatedGames));
-        showToast("경기 결과가 저장되었습니다 (로컬)");
+        showToast("\uACBD\uAE30 \uACB0\uACFC\uAC00 \uC800\uC7A5\uB418\uC5C8\uC2B5\uB2C8\uB2E4 (\uB85C\uCEEC)");
       } else {
-        const res = await fetch(`${API_BASE}/games/${game.id}/scores`, {
+        const res = await fetch(\`\${API_BASE}/games/\${game.id}/scores\`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ players: filledPlayers }),
         });
-        if (!res.ok) throw new Error("저장 실패");
-        showToast("경기 결과가 저장되었습니다");
+        if (!res.ok) throw new Error("\uC800\uC7A5 \uC2E4\uD328");
+        showToast("\uACBD\uAE30 \uACB0\uACFC\uAC00 \uC800\uC7A5\uB418\uC5C8\uC2B5\uB2C8\uB2E4");
         loadGames();
       }
       setEditingGameId(null);
     } catch {
-      showToast("결과 저장 실패", "error");
+      showToast("\uACB0\uACFC \uC800\uC7A5 \uC2E4\uD328", "error");
     }
   };
 
   const handleDeleteGame = async (gameId: number) => {
-    if (!confirm("이 경기를 삭제하시겠습니까?")) return;
+    if (!confirm("\uC774 \uACBD\uAE30\uB97C \uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?")) return;
     try {
       if (useLocalStorage) {
         const updated = games.filter((g) => g.id !== gameId);
         setGames(updated);
         localStorage.setItem(LOCAL_GAMES_KEY, JSON.stringify(updated));
-        showToast("경기가 삭제되었습니다 (로컬)");
+        showToast("\uACBD\uAE30\uAC00 \uC0AD\uC81C\uB418\uC5C8\uC2B5\uB2C8\uB2E4 (\uB85C\uCEEC)");
       } else {
-        const res = await fetch(`${API_BASE}/games/${gameId}`, { method: "DELETE" });
-        if (!res.ok) throw new Error("삭제 실패");
-        showToast("경기가 삭제되었습니다");
+        const res = await fetch(\`\${API_BASE}/games/\${gameId}\`, { method: "DELETE" });
+        if (!res.ok) throw new Error("\uC0AD\uC81C \uC2E4\uD328");
+        showToast("\uACBD\uAE30\uAC00 \uC0AD\uC81C\uB418\uC5C8\uC2B5\uB2C8\uB2E4");
         loadGames();
       }
     } catch {
-      showToast("경기 삭제 실패", "error");
-    }
-  };
-
-  const handleUpdateCourseName = async (gameId: number, newName: string) => {
-    try {
-      if (useLocalStorage) {
-        const updated = games.map((g) =>
-          g.id === gameId ? { ...g, courseName: newName } : g
-        );
-        setGames(updated);
-        localStorage.setItem(LOCAL_GAMES_KEY, JSON.stringify(updated));
-        showToast("코스명이 수정되었습니다 (로컬)");
-      } else {
-        const res = await fetch(`${API_BASE}/games/${gameId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ courseName: newName }),
-        });
-        if (!res.ok) throw new Error("수정 실패");
-        showToast("코스명이 수정되었습니다");
-        loadGames();
-      }
-      setEditingCourseName(null);
-    } catch {
-      showToast("코스명 수정 실패", "error");
+      showToast("\uACBD\uAE30 \uC0AD\uC81C \uC2E4\uD328", "error");
     }
   };
 
   return (
     <div>
       <div className="card">
-        <h2 className="card-title" style={{ marginBottom: "1rem" }}>🏆 경기 결과</h2>
+        <h2 className="card-title" style={{ marginBottom: "1rem" }}>\uD83C\uDFC6 \uACBD\uAE30 \uACB0\uACFC</h2>
 
         {games.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">🏌️</div>
+            <div className="empty-state-icon">\uD83C\uDFCC\uFE0F</div>
             <div className="empty-state-text">
-              아직 경기 기록이 없습니다.<br />
-              "핸디캡 계산" 탭에서 계산 후 경기를 등록해주세요.
+              \uC544\uC9C1 \uACBD\uAE30 \uAE30\uB85D\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.<br />
+              "\uD578\uB514\uCEA1 \uACC4\uC0B0" \uD0ED\uC5D0\uC11C \uACC4\uC0B0 \uD6C4 \uACBD\uAE30\uB97C \uB4F1\uB85D\uD574\uC8FC\uC138\uC694.
             </div>
           </div>
         ) : (
@@ -174,7 +150,7 @@ export default function GameResultsPage({
               <div
                 key={game.id}
                 style={{
-                  border: `2px solid ${pending ? "#ff9800" : "var(--border)"}`,
+                  border: \`2px solid \${pending ? "#ff9800" : "var(--border)"}\`,
                   borderRadius: "8px",
                   padding: "1rem",
                   marginBottom: "1rem",
@@ -182,54 +158,27 @@ export default function GameResultsPage({
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-                  <div style={{ flex: 1 }}>
-                    {editingCourseName?.gameId === game.id ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <strong>📅 {game.gameDate?.split("T")[0]} -</strong>
-                        <input
-                          className="form-control"
-                          style={{ width: "200px" }}
-                          value={editingCourseName.name}
-                          onChange={(e) => setEditingCourseName({ ...editingCourseName, name: e.target.value })}
-                          placeholder="골프장명"
-                          autoFocus
-                        />
-                        <button className="btn btn-primary" style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem" }}
-                          onClick={() => handleUpdateCourseName(game.id, editingCourseName.name)}>저장</button>
-                        <button className="btn" style={{ padding: "0.3rem 0.75rem", fontSize: "0.8rem" }}
-                          onClick={() => setEditingCourseName(null)}>취소</button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <strong style={{ fontSize: "1.05rem" }}>
-                          📅 {game.gameDate?.split("T")[0]}
-                          {game.courseName ? ` - ${game.courseName}` : " (코스 미입력)"}
-                        </strong>
-                        <button
-                          className="btn"
-                          style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem", background: "#e3f2fd", color: "#1565c0", border: "1px solid #90caf9" }}
-                          onClick={() => setEditingCourseName({ gameId: game.id, name: game.courseName || "" })}
-                          title="코스명 수정"
-                        >✏️</button>
-                        {pending && (
-                          <span style={{ background: "#ff9800", color: "white", padding: "0.15rem 0.5rem", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600 }}>
-                            ⏳ 스코어 미입력
-                          </span>
-                        )}
-                      </div>
+                  <div>
+                    <strong style={{ fontSize: "1.05rem" }}>
+                      \uD83D\uDCC5 {game.gameDate?.split("T")[0]}
+                      {game.courseName && \` - \${game.courseName}\`}
+                    </strong>
+                    {pending && (
+                      <span style={{ marginLeft: "0.75rem", background: "#ff9800", color: "white", padding: "0.15rem 0.5rem", borderRadius: "10px", fontSize: "0.75rem", fontWeight: 600 }}>
+                        \u23F3 \uC2A4\uCF54\uC5B4 \uBBF8\uC785\uB825
+                      </span>
                     )}
                   </div>
                   <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                     <span style={{ fontSize: "0.8rem", color: "#999" }}>
-                      비율: {Math.round(game.handicapRatio * 100)}% |{" "}
-                      {game.roundingMethod === "round" ? "반올림" : game.roundingMethod === "ceil" ? "올림" : "버림"}
+                      \uBE44\uC728: {Math.round(game.handicapRatio * 100)}% |{" "}
+                      {game.roundingMethod === "round" ? "\uBC18\uC62C\uB9BC" : game.roundingMethod === "ceil" ? "\uC62C\uB9BC" : "\uBC84\uB9BC"}
                     </span>
                     <button
                       className="btn"
-                      style={{ padding: "0.3rem 0.6rem", fontSize: "0.8rem", background: "#ffebee", color: "#c62828", border: "1px solid #ef9a9a", fontWeight: 600 }}
+                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", background: "#ffebee", color: "#c62828", border: "1px solid #ef9a9a" }}
                       onClick={() => handleDeleteGame(game.id)}
-                      title="경기 삭제"
-                    >🗑 삭제</button>
+                    >\uD83D\uDDD1</button>
                   </div>
                 </div>
 
@@ -237,12 +186,12 @@ export default function GameResultsPage({
                   <table>
                     <thead>
                       <tr>
-                        <th>순위</th>
-                        <th>선수</th>
-                        <th>G핸디</th>
-                        <th>핸디캡</th>
-                        <th>그로스</th>
-                        <th>넷스코어</th>
+                        <th>\uC21C\uC704</th>
+                        <th>\uC120\uC218</th>
+                        <th>G\uD578\uB514</th>
+                        <th>\uD578\uB514\uCEA1</th>
+                        <th>\uADF8\uB85C\uC2A4</th>
+                        <th>\uB137\uC2A4\uCF54\uC5B4</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -252,10 +201,10 @@ export default function GameResultsPage({
                           <tr key={idx}>
                             <td>
                               {gp.rank ? (
-                                <span className={`rank-badge rank-${gp.rank <= 3 ? gp.rank : "other"}`}>{gp.rank}</span>
+                                <span className={\`rank-badge rank-\${gp.rank <= 3 ? gp.rank : "other"}\`}>{gp.rank}</span>
                               ) : "-"}
                             </td>
-                            <td><strong>{gp.player?.name || `선수 ${gp.playerId}`}</strong></td>
+                            <td><strong>{gp.player?.name || \`\uC120\uC218 \${gp.playerId}\`}</strong></td>
                             <td>{gp.gHandicap}</td>
                             <td>{gp.calculatedHandicap}</td>
                             <td>
@@ -264,7 +213,7 @@ export default function GameResultsPage({
                                   type="number"
                                   className="form-control"
                                   style={{ width: "80px" }}
-                                  placeholder="타수"
+                                  placeholder="\uD0C0\uC218"
                                   value={scores[gp.playerId] || ""}
                                   onChange={(e) => setScores({ ...scores, [gp.playerId]: e.target.value })}
                                 />
@@ -286,17 +235,17 @@ export default function GameResultsPage({
                 {pending && !isEditing && (
                   <div style={{ marginTop: "0.75rem", textAlign: "center" }}>
                     <button className="btn btn-accent" onClick={() => startScoreEdit(game)} style={{ padding: "0.6rem 2rem" }}>
-                      ✏️ 스코어 입력
+                      \u270F\uFE0F \uC2A4\uCF54\uC5B4 \uC785\uB825
                     </button>
                   </div>
                 )}
                 {isEditing && (
                   <div style={{ marginTop: "0.75rem", textAlign: "center", display: "flex", gap: "0.75rem", justifyContent: "center" }}>
                     <button className="btn btn-accent" onClick={() => handleSaveScores(game)} style={{ padding: "0.6rem 2rem" }}>
-                      🏆 결과 저장 & 순위 계산
+                      \uD83C\uDFC6 \uACB0\uACFC \uC800\uC7A5 & \uC21C\uC704 \uACC4\uC0B0
                     </button>
                     <button className="btn" onClick={() => setEditingGameId(null)} style={{ padding: "0.6rem 1.5rem" }}>
-                      취소
+                      \uCDE8\uC18C
                     </button>
                   </div>
                 )}
@@ -308,3 +257,11 @@ export default function GameResultsPage({
     </div>
   );
 }
+`;
+
+fs.writeFileSync(
+  'C:/Users/A67827/source/repos/Golf_Handicap_Calc/frontend/src/pages/GameResultsPage.tsx',
+  content,
+  'utf8'
+);
+console.log('Done');
