@@ -29,6 +29,7 @@ interface Props {
 export default function StatsPage({ players, useLocalStorage, showToast }: Props) {
   const [games, setGames] = useState<Game[]>([]);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const loadGames = useCallback(() => {
     if (useLocalStorage) {
@@ -204,40 +205,159 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
         <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "0.75rem" }}>
           선수를 선택하세요 (최대 {MAX_SELECT}명). 1명 선택 시 개인 기록, 2명 이상 선택 시 교집합 경기만 표시됩니다.
         </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-          {activePlayers.map((player) => {
-            const isSelected = selectedPlayerIds.includes(player.id);
-            const colorIdx = selectedPlayerIds.indexOf(player.id);
-            return (
-              <button
-                key={player.id}
-                onClick={() => togglePlayer(player.id)}
+
+        {/* 선택된 선수 태그 + 드롭다운 */}
+        <div style={{ position: "relative" }}>
+          <div
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            style={{
+              border: "1.5px solid var(--border)",
+              borderRadius: "8px",
+              padding: "0.5rem 0.75rem",
+              minHeight: "44px",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "0.4rem",
+              alignItems: "center",
+              cursor: "pointer",
+              background: "white",
+            }}
+          >
+            {selectedPlayerIds.length === 0 && (
+              <span style={{ color: "#aaa", fontSize: "0.9rem" }}>▼ 선수를 선택하세요...</span>
+            )}
+            {selectedPlayerIds.map((pid, idx) => (
+              <span
+                key={pid}
                 style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "20px",
-                  border: isSelected
-                    ? `2px solid ${PLAYER_COLORS[colorIdx] || "#333"}`
-                    : "2px solid #ddd",
-                  background: isSelected
-                    ? `${PLAYER_COLORS[colorIdx] || "#333"}18`
-                    : "white",
-                  color: isSelected
-                    ? PLAYER_COLORS[colorIdx] || "#333"
-                    : "#666",
-                  fontWeight: isSelected ? 700 : 500,
-                  cursor: "pointer",
-                  fontSize: "0.9rem",
-                  transition: "all 0.2s",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.3rem",
+                  padding: "0.2rem 0.6rem",
+                  borderRadius: "14px",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  background: `${PLAYER_COLORS[idx]}18`,
+                  color: PLAYER_COLORS[idx],
+                  border: `1.5px solid ${PLAYER_COLORS[idx]}`,
                 }}
               >
-                {isSelected && "✔ "}{player.name}
-                <span style={{ fontSize: "0.75rem", marginLeft: "0.3rem", opacity: 0.7 }}>
-                  G{player.gHandicap}
-                </span>
-              </button>
-            );
-          })}
+                {getPlayerName(pid)}
+                <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>G{players.find(p => p.id === pid)?.gHandicap}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); togglePlayer(pid); }}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    color: PLAYER_COLORS[idx], fontWeight: 700, fontSize: "0.9rem",
+                    padding: "0 0.1rem", lineHeight: 1,
+                  }}
+                >×</button>
+              </span>
+            ))}
+            {selectedPlayerIds.length > 0 && selectedPlayerIds.length < MAX_SELECT && (
+              <span style={{ color: "#aaa", fontSize: "0.8rem" }}>▼ 추가 선택...</span>
+            )}
+          </div>
+
+          {/* 드롭다운 목록 */}
+          {dropdownOpen && (
+            <>
+              <div
+                style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", zIndex: 99 }}
+                onClick={() => setDropdownOpen(false)}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  background: "white",
+                  border: "1.5px solid var(--border)",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+                  zIndex: 100,
+                  maxHeight: "300px",
+                  overflowY: "auto",
+                  marginTop: "4px",
+                }}
+              >
+                {activePlayers.length === 0 ? (
+                  <div style={{ padding: "1rem", color: "#999", textAlign: "center", fontSize: "0.9rem" }}>
+                    등록된 활성 선수가 없습니다.
+                  </div>
+                ) : (
+                  activePlayers.map((player) => {
+                    const isSelected = selectedPlayerIds.includes(player.id);
+                    const colorIdx = selectedPlayerIds.indexOf(player.id);
+                    const isDisabled = !isSelected && selectedPlayerIds.length >= MAX_SELECT;
+                    return (
+                      <div
+                        key={player.id}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            togglePlayer(player.id);
+                          }
+                        }}
+                        style={{
+                          padding: "0.6rem 1rem",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          cursor: isDisabled ? "not-allowed" : "pointer",
+                          background: isSelected
+                            ? `${PLAYER_COLORS[colorIdx]}10`
+                            : "transparent",
+                          opacity: isDisabled ? 0.4 : 1,
+                          borderBottom: "1px solid #f0f0f0",
+                          transition: "background 0.15s",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDisabled && !isSelected)
+                            (e.currentTarget as HTMLElement).style.background = "#f5f5f5";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLElement).style.background = isSelected
+                            ? `${PLAYER_COLORS[colorIdx]}10`
+                            : "transparent";
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <span
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "4px",
+                              border: isSelected
+                                ? `2px solid ${PLAYER_COLORS[colorIdx]}`
+                                : "2px solid #ccc",
+                              background: isSelected ? PLAYER_COLORS[colorIdx] : "white",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "0.7rem",
+                              color: "white",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {isSelected && "✓"}
+                          </span>
+                          <span style={{ fontWeight: isSelected ? 700 : 500, fontSize: "0.9rem" }}>
+                            {player.name}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: "0.8rem", color: "#999" }}>
+                          G핸디 {player.gHandicap} · 평균 {player.avgScore}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          )}
         </div>
+
         {selectedPlayerIds.length > 0 && (
           <button
             className="btn btn-sm"
