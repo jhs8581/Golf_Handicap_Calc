@@ -68,4 +68,4 @@ export interface HandicapSlot {
 }
 
 // ===== 탭 =====
-export type TabType = "settings" | "players" | "handicap" | "results";
+export type TabType = "settings" | "players" | "handicap" | "results" | "stats";

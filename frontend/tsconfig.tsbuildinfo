@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/types.ts","./src/vite-env.d.ts","./src/components/toast.tsx","./src/pages/gameresultspage.tsx","./src/pages/handicapcalcpage.tsx","./src/pages/playerspage.tsx","./src/pages/settingspage.tsx","./src/pages/statspage.tsx"],"version":"5.9.3"}

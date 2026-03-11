@@ -4,6 +4,7 @@ import SettingsPage from "./pages/SettingsPage";
 import PlayersPage from "./pages/PlayersPage";
 import HandicapCalcPage from "./pages/HandicapCalcPage";
 import GameResultsPage from "./pages/GameResultsPage";
+import StatsPage from "./pages/StatsPage";
 import Toast from "./components/Toast";
 
 // DB 미연결 시 로컬 스토리지 기반 fallback
@@ -181,6 +182,7 @@ function App() {
   const tabs: { key: TabType; label: string; icon: string }[] = [
     { key: "handicap", label: "핸디캡 계산", icon: "🧮" },
     { key: "results", label: "경기 결과", icon: "🏆" },
+    { key: "stats", label: "전적 분석", icon: "📊" },
     { key: "players", label: "선수 관리", icon: "👤" },
     { key: "settings", label: "핸디캡 설정", icon: "⚙️" },
   ];
@@ -247,6 +249,13 @@ function App() {
           <GameResultsPage
             players={players}
             settings={settings}
+            useLocalStorage={useLocalStorage}
+            showToast={showToast}
+          />
+        )}
+        {activeTab === "stats" && (
+          <StatsPage
+            players={players}
             useLocalStorage={useLocalStorage}
             showToast={showToast}
           />
