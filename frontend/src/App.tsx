@@ -19,7 +19,7 @@ const defaultSettings: Settings = {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState<TabType>("settings");
+  const [activeTab, setActiveTab] = useState<TabType>("handicap");
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [players, setPlayers] = useState<Player[]>([]);
   const [toast, setToast] = useState<{
@@ -179,10 +179,10 @@ function App() {
   };
 
   const tabs: { key: TabType; label: string; icon: string }[] = [
-    { key: "settings", label: "핸디캡 설정", icon: "⚙️" },
-    { key: "players", label: "선수 관리", icon: "👤" },
     { key: "handicap", label: "핸디캡 계산", icon: "🧮" },
     { key: "results", label: "경기 결과", icon: "🏆" },
+    { key: "players", label: "선수 관리", icon: "👤" },
+    { key: "settings", label: "핸디캡 설정", icon: "⚙️" },
   ];
 
   return (
