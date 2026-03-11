@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import type { Player, Settings, Game, RoundingMethod } from "../types";
 
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
 interface Props {
   players: Player[];
   settings: Settings;
@@ -58,7 +60,7 @@ export default function GameResultsPage({
       const saved = localStorage.getItem(LOCAL_GAMES_KEY);
       if (saved) setGames(JSON.parse(saved));
     } else {
-      fetch("/api/games")
+      fetch(`${API_BASE}/games`)
         .then((r) => r.json())
         .then(setGames)
         .catch(() => setGames([]));
@@ -166,13 +168,13 @@ export default function GameResultsPage({
         localStorage.setItem(LOCAL_GAMES_KEY, JSON.stringify(updated));
         showToast("경기 결과가 저장되었습니다 (로컬)");
       } else {
-        const res = await fetch("/api/games", {
+        const res = await fetch(`${API_BASE}/games`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(gameData),
         });
         if (res.ok) {
-          const gamesRes = await fetch("/api/games");
+          const gamesRes = await fetch(`${API_BASE}/games`);
           setGames(await gamesRes.json());
           showToast("경기 결과가 저장되었습니다");
         }

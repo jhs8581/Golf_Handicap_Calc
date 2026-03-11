@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import type { Player, PlayerRecord } from "../types";
+
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
 import {
   LineChart,
   Line,
@@ -49,7 +52,7 @@ export default function PlayersPage({
   // 선수 기록 로드
   useEffect(() => {
     if (selectedPlayer && !useLocalStorage) {
-      fetch(`/api/players/${selectedPlayer}/records`)
+      fetch(`${API_BASE}/players/${selectedPlayer}/records`)
         .then((r) => r.json())
         .then(setRecords)
         .catch(() => setRecords([]));
@@ -119,12 +122,12 @@ export default function PlayersPage({
       localStorage.setItem(key, JSON.stringify(updated));
     } else {
       try {
-        await fetch(`/api/players/${selectedPlayer}/records`, {
+        await fetch(`${API_BASE}/players/${selectedPlayer}/records`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
         });
-        const res = await fetch(`/api/players/${selectedPlayer}/records`);
+        const res = await fetch(`${API_BASE}/players/${selectedPlayer}/records`);
         setRecords(await res.json());
       } catch {
         /* ignore */

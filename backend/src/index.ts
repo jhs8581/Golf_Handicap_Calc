@@ -10,7 +10,14 @@ import gameRoutes from "./routes/gameRoutes";
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(",")
+      : ["http://localhost:3000"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes

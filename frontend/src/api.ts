@@ -1,8 +1,10 @@
 import axios from "axios";
 import type { Player, PlayerRecord, Settings, Game } from "./types";
 
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: API_BASE,
 });
 
 // ===== 설정 API =====

@@ -9,6 +9,7 @@ import Toast from "./components/Toast";
 // DB 미연결 시 로컬 스토리지 기반 fallback
 const LOCAL_SETTINGS_KEY = "golf_settings";
 const LOCAL_PLAYERS_KEY = "golf_players";
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 const defaultSettings: Settings = {
   handicapRatio: 0.8,
@@ -43,8 +44,8 @@ function App() {
   const loadInitialData = async () => {
     try {
       const [settingsRes, playersRes] = await Promise.all([
-        fetch("/api/settings"),
-        fetch("/api/players"),
+        fetch(`${API_BASE}/settings`),
+        fetch(`${API_BASE}/players`),
       ]);
 
       if (settingsRes.ok && playersRes.ok) {
@@ -74,7 +75,7 @@ function App() {
         setSettings(newSettings);
         showToast("설정이 저장되었습니다 (로컬)");
       } else {
-        const res = await fetch("/api/settings", {
+        const res = await fetch(`${API_BASE}/settings`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newSettings),
@@ -111,7 +112,7 @@ function App() {
         showToast("선수가 등록되었습니다 (로컬)");
         return newPlayer;
       } else {
-        const res = await fetch("/api/players", {
+        const res = await fetch(`${API_BASE}/players`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(player),
@@ -139,7 +140,7 @@ function App() {
         localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(updated));
         showToast("선수 정보가 수정되었습니다 (로컬)");
       } else {
-        const res = await fetch(`/api/players/${id}`, {
+        const res = await fetch(`${API_BASE}/players/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -166,7 +167,7 @@ function App() {
         localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(updated));
         showToast("선수가 삭제되었습니다 (로컬)");
       } else {
-        const res = await fetch(`/api/players/${id}`, { method: "DELETE" });
+        const res = await fetch(`${API_BASE}/players/${id}`, { method: "DELETE" });
         if (res.ok) {
           setPlayers((prev) => prev.filter((p) => p.id !== id));
           showToast("선수가 삭제되었습니다");
