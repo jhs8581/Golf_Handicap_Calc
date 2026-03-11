@@ -235,7 +235,13 @@ function App() {
           />
         )}
         {activeTab === "handicap" && (
-          <HandicapCalcPage players={players} settings={settings} />
+          <HandicapCalcPage
+            players={players}
+            settings={settings}
+            useLocalStorage={useLocalStorage}
+            showToast={showToast}
+            onNavigateToResults={() => setActiveTab("results")}
+          />
         )}
         {activeTab === "results" && (
           <GameResultsPage

@@ -115,4 +115,96 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
+// 스코어 업데이트 (경기 등록 후 나중에 타수 입력)
+router.put("/:id/scores", async (req: Request, res: Response) => {
+  try {
+    const gameId = parseInt(req.params.id as string);
+    const gpRepo = AppDataSource.getRepository(GamePlayer);
+    const playerRepo = AppDataSource.getRepository(Player);
+    const recordRepo = AppDataSource.getRepository(PlayerRecord);
+    const gameRepo = AppDataSource.getRepository(Game);
+
+    const game = await gameRepo.findOne({
+      where: { id: gameId },
+      relations: ["gamePlayers"],
+    });
+    if (!game) {
+      return res.status(404).json({ error: "경기를 찾을 수 없습니다" });
+    }
+
+    const { players: playerScores } = req.body;
+
+    // 기존 gamePlayers 업데이트
+    for (const ps of playerScores) {
+      const gp = game.gamePlayers.find(
+        (g: GamePlayer) => g.playerId === ps.playerId
+      );
+      if (gp) {
+        gp.grossScore = ps.grossScore;
+        gp.netScore = ps.netScore;
+        await gpRepo.save(gp);
+      }
+    }
+
+    // 순위 계산
+    const allGp = await gpRepo.find({ where: { gameId } });
+    const sorted = allGp
+      .filter((gp) => gp.netScore != null)
+      .sort((a, b) => (a.netScore || 999) - (b.netScore || 999));
+
+    for (let i = 0; i < sorted.length; i++) {
+      sorted[i].rank = i + 1;
+      await gpRepo.save(sorted[i]);
+    }
+
+    // 선수 기록에 반영
+    for (const gp of allGp) {
+      if (gp.grossScore) {
+        const player = await playerRepo.findOne({ where: { id: gp.playerId } });
+        if (player) {
+          const record = recordRepo.create({
+            playerId: gp.playerId,
+            recordDate: game.gameDate,
+            gHandicap: gp.gHandicap,
+            avgScore: gp.grossScore,
+          });
+          await recordRepo.save(record);
+
+          player.gHandicap = gp.gHandicap;
+          player.avgScore = gp.grossScore;
+          await playerRepo.save(player);
+        }
+      }
+    }
+
+    const result = await gameRepo.findOne({
+      where: { id: gameId },
+      relations: ["gamePlayers", "gamePlayers.player"],
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "스코어 업데이트 실패" });
+  }
+});
+
+// 경기 삭제
+router.delete("/:id", async (req: Request, res: Response) => {
+  try {
+    const gameId = parseInt(req.params.id as string);
+    const gameRepo = AppDataSource.getRepository(Game);
+    const gpRepo = AppDataSource.getRepository(GamePlayer);
+
+    // 관련 gamePlayers 먼저 삭제
+    await gpRepo.delete({ gameId });
+    await gameRepo.delete(gameId);
+
+    res.json({ message: "경기가 삭제되었습니다" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "경기 삭제 실패" });
+  }
+});
+
 export default router;

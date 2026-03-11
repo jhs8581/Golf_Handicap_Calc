@@ -1,9 +1,14 @@
 import { useState, useMemo } from "react";
 import type { Player, Settings, HandicapSlot, RoundingMethod } from "../types";
 
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+
 interface Props {
   players: Player[];
   settings: Settings;
+  useLocalStorage: boolean;
+  showToast: (msg: string, type?: "success" | "error") => void;
+  onNavigateToResults: () => void;
 }
 
 function applyRounding(value: number, method: RoundingMethod): number {
@@ -18,7 +23,7 @@ function applyRounding(value: number, method: RoundingMethod): number {
   }
 }
 
-export default function HandicapCalcPage({ players, settings }: Props) {
+export default function HandicapCalcPage({ players, settings, useLocalStorage, showToast, onNavigateToResults }: Props) {
   const [slotCount, setSlotCount] = useState(settings.defaultPlayerCount);
   const [slots, setSlots] = useState<HandicapSlot[]>(
     Array.from({ length: settings.maxPlayerCount }, () => ({
@@ -90,6 +95,58 @@ export default function HandicapCalcPage({ players, settings }: Props) {
       .filter((s, i) => i !== currentIndex && s.playerId !== null)
       .map((s) => s.playerId);
     return players.filter((p) => !selectedIds.includes(p.id));
+  };
+
+  // 오늘의 경기 등록
+  const handleRegisterGame = async () => {
+    const filled = activeSlots.filter((s) => s.playerId !== null);
+    const gameDate = new Date().toISOString().split("T")[0];
+
+    const gamePlayers = filled.map((s) => ({
+      playerId: s.playerId!,
+      gHandicap: s.gHandicap,
+      calculatedHandicap: s.calculatedHandicap,
+    }));
+
+    const gameData = {
+      gameDate,
+      courseName: "",
+      handicapRatio: settings.handicapRatio,
+      roundingMethod: settings.roundingMethod,
+      players: gamePlayers,
+    };
+
+    try {
+      if (useLocalStorage) {
+        const localGame = {
+          id: Date.now(),
+          gameDate,
+          courseName: "",
+          handicapRatio: settings.handicapRatio,
+          roundingMethod: settings.roundingMethod,
+          createdAt: new Date().toISOString(),
+          gamePlayers: gamePlayers.map((p) => ({
+            ...p,
+            player: players.find((pl) => pl.id === p.playerId),
+          })),
+        };
+        const saved = localStorage.getItem("golf_games");
+        const games = saved ? JSON.parse(saved) : [];
+        localStorage.setItem("golf_games", JSON.stringify([localGame, ...games]));
+        showToast("오늘의 경기가 등록되었습니다 (로컬)");
+      } else {
+        const res = await fetch(`${API_BASE}/games`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(gameData),
+        });
+        if (!res.ok) throw new Error("저장 실패");
+        showToast("오늘의 경기가 등록되었습니다");
+      }
+      onNavigateToResults();
+    } catch {
+      showToast("경기 등록 실패", "error");
+    }
   };
 
   // 결과 테이블 데이터
@@ -237,6 +294,20 @@ export default function HandicapCalcPage({ players, settings }: Props) {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* 오늘의 경기 등록 버튼 */}
+          <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
+            <button
+              className="btn btn-primary"
+              onClick={handleRegisterGame}
+              style={{ fontSize: "1.1rem", padding: "0.8rem 2.5rem" }}
+            >
+              🏌️ 오늘의 경기 등록
+            </button>
+            <p style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "#888" }}>
+              경기를 등록하면 "경기 결과" 탭에서 타수를 입력할 수 있습니다.
+            </p>
           </div>
         </div>
       )}
