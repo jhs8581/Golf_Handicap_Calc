@@ -18,7 +18,9 @@ const API_BASE = import.meta.env.VITE_API_URL || "/api";
 const LOCAL_GAMES_KEY = "golf_games";
 const MAX_SELECT = 4;
 
-const PLAYER_COLORS = ["#2e7d32", "#1565c0", "#e65100", "#6a1b9a"];
+const PLAYER_COLORS = ["#0277bd", "#d84315", "#2e7d32", "#6a1b9a"];
+const PLAYER_COLORS_LIGHT = ["#e1f5fe", "#fbe9e7", "#e8f5e9", "#f3e5f5"];
+const PLAYER_COLORS_MID = ["#b3e5fc", "#ffccbc", "#c8e6c9", "#e1bee7"];
 
 interface Props {
   players: Player[];
@@ -397,7 +399,7 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                 marginBottom: "1rem",
               }}
             >
-              <StatBox label="총 경기" value={`${singlePlayerStats.totalGames}회`} color="#333" />
+              <StatBox label="총 경기" value={`${singlePlayerStats.totalGames}회`} color="#455a64" />
               <StatBox
                 label="승"
                 value={`${singlePlayerStats.wins}승`}
@@ -417,27 +419,27 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                       )}%`
                     : "-"
                 }
-                color="#1565c0"
+                color="#0277bd"
               />
               <StatBox
                 label="평균 그로스"
                 value={`${singlePlayerStats.avgGross}`}
-                color="#e65100"
+                color="#d84315"
               />
               <StatBox
                 label="평균 넷"
                 value={`${singlePlayerStats.avgNet}`}
-                color="#6a1b9a"
+                color="#0277bd"
               />
               <StatBox
                 label="베스트 그로스"
                 value={`${singlePlayerStats.bestGross}`}
-                color="#00695c"
+                color="#d84315"
               />
               <StatBox
                 label="베스트 넷"
                 value={`${singlePlayerStats.bestNet}`}
-                color="#4527a0"
+                color="#0277bd"
               />
             </div>
           </div>
@@ -485,7 +487,7 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                       type="monotone"
                       dataKey="grossScore"
                       name="그로스"
-                      stroke="#e65100"
+                      stroke="#d84315"
                       strokeWidth={2}
                       dot={{ r: 5 }}
                       activeDot={{ r: 7 }}
@@ -494,7 +496,7 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                       type="monotone"
                       dataKey="netScore"
                       name="넷스코어"
-                      stroke="#1565c0"
+                      stroke="#0277bd"
                       strokeWidth={2}
                       dot={{ r: 5 }}
                       activeDot={{ r: 7 }}
@@ -805,8 +807,8 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                 <table style={{ borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      <th rowSpan={2} style={{ background: "#455a64", color: "white", verticalAlign: "middle" }}>날짜</th>
-                      <th rowSpan={2} style={{ background: "#455a64", color: "white", verticalAlign: "middle" }}>코스</th>
+                      <th rowSpan={2} style={{ background: "#37474f", color: "#fff", verticalAlign: "middle", borderRight: "1px solid #546e7a" }}>날짜</th>
+                      <th rowSpan={2} style={{ background: "#37474f", color: "#fff", verticalAlign: "middle", borderRight: "2px solid #90a4ae" }}>코스</th>
                       {selectedPlayerIds.map((pid, idx) => (
                         <th
                           key={pid}
@@ -815,7 +817,9 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                             background: PLAYER_COLORS[idx],
                             color: "white",
                             fontSize: "0.95rem",
-                            borderLeft: "2px solid white",
+                            fontWeight: 700,
+                            borderLeft: idx > 0 ? "3px solid white" : "none",
+                            letterSpacing: "0.5px",
                           }}
                         >
                           {getPlayerName(pid)}
@@ -823,43 +827,41 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                       ))}
                     </tr>
                     <tr>
-                      {selectedPlayerIds.map((pid, idx) => {
-                        const lightBg = `${PLAYER_COLORS[idx]}25`;
-                        return (
-                          <React.Fragment key={`sub-${pid}`}>
-                            <th style={{ fontSize: "0.75rem", background: lightBg, color: "#333", borderLeft: "2px solid white" }}>그로스</th>
-                            <th style={{ fontSize: "0.75rem", background: lightBg, color: "#333" }}>넷</th>
-                            <th style={{ fontSize: "0.75rem", background: lightBg, color: "#333" }}>순위</th>
-                          </React.Fragment>
-                        );
-                      })}
+                      {selectedPlayerIds.map((pid, idx) => (
+                        <React.Fragment key={`sub-${pid}`}>
+                          <th style={{ fontSize: "0.75rem", background: PLAYER_COLORS_MID[idx], color: "#333", fontWeight: 600, borderLeft: idx > 0 ? "3px solid white" : "none" }}>그로스</th>
+                          <th style={{ fontSize: "0.75rem", background: PLAYER_COLORS_MID[idx], color: "#333", fontWeight: 600 }}>넷</th>
+                          <th style={{ fontSize: "0.75rem", background: PLAYER_COLORS_MID[idx], color: "#333", fontWeight: 600 }}>순위</th>
+                        </React.Fragment>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {[...filteredGames].reverse().map((game) => {
+                    {[...filteredGames].reverse().map((game, rowIdx) => {
                       const gpList = selectedPlayerIds.map((pid) =>
                         (game.gamePlayers || []).find((gp) => gp.playerId === pid)
                       );
                       const minRank = Math.min(
                         ...gpList.map((gp) => gp?.rank || 999)
                       );
+                      const rowBg = rowIdx % 2 === 0 ? "#fff" : "#fafafa";
 
                       return (
-                        <tr key={game.id}>
-                          <td style={{ whiteSpace: "nowrap" }}>{game.gameDate?.split("T")[0]}</td>
-                          <td>{game.courseName || "-"}</td>
+                        <tr key={game.id} style={{ background: rowBg }}>
+                          <td style={{ whiteSpace: "nowrap", borderRight: "1px solid #e0e0e0" }}>{game.gameDate?.split("T")[0]}</td>
+                          <td style={{ borderRight: "2px solid #e0e0e0" }}>{game.courseName || "-"}</td>
                           {selectedPlayerIds.map((pid, idx) => {
                             const gp = (game.gamePlayers || []).find(
                               (g) => g.playerId === pid
                             );
                             const isWinner =
                               gp?.rank != null && gp.rank === minRank && gp.rank === 1;
-                            const cellBg = idx % 2 === 1 ? "#f8f9fa" : "transparent";
+                            const cellBg = isWinner ? `${PLAYER_COLORS_LIGHT[idx]}` : "transparent";
                             return (
                               <React.Fragment key={`data-${game.id}-${pid}`}>
-                                <td style={{ background: cellBg, borderLeft: `2px solid ${PLAYER_COLORS[idx]}20` }}>{gp?.grossScore || "-"}</td>
+                                <td style={{ background: cellBg, borderLeft: idx > 0 ? `3px solid ${PLAYER_COLORS_MID[idx]}` : "none" }}>{gp?.grossScore || "-"}</td>
                                 <td style={{ background: cellBg }}>
-                                  <strong>{gp?.netScore || "-"}</strong>
+                                  <strong style={{ color: isWinner ? PLAYER_COLORS[idx] : "#333" }}>{gp?.netScore || "-"}</strong>
                                 </td>
                                 <td style={{ background: cellBg }}>
                                   {gp?.rank ? (
@@ -909,14 +911,15 @@ function StatBox({
         textAlign: "center",
         padding: "1rem 0.5rem",
         borderRadius: "10px",
-        background: `${color}08`,
-        border: `1px solid ${color}30`,
+        background: "#fff",
+        border: `1px solid #e0e0e0`,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       }}
     >
-      <div style={{ fontSize: "0.75rem", color: "#999", marginBottom: "0.25rem" }}>
+      <div style={{ fontSize: "0.75rem", color: "#888", marginBottom: "0.3rem", fontWeight: 500 }}>
         {label}
       </div>
-      <div style={{ fontSize: "1.4rem", fontWeight: 800, color }}>{value}</div>
+      <div style={{ fontSize: "1.5rem", fontWeight: 800, color }}>{value}</div>
     </div>
   );
 }
