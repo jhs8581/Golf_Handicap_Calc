@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -802,32 +802,41 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                 📋 교집합 경기 상세
               </h3>
               <div className="table-wrapper">
-                <table>
+                <table style={{ borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
-                      <th>날짜</th>
-                      <th>코스</th>
+                      <th rowSpan={2} style={{ background: "#455a64", color: "white", verticalAlign: "middle" }}>날짜</th>
+                      <th rowSpan={2} style={{ background: "#455a64", color: "white", verticalAlign: "middle" }}>코스</th>
                       {selectedPlayerIds.map((pid, idx) => (
-                        <th key={pid} colSpan={3} style={{ background: PLAYER_COLORS[idx], color: "white" }}>
+                        <th
+                          key={pid}
+                          colSpan={3}
+                          style={{
+                            background: PLAYER_COLORS[idx],
+                            color: "white",
+                            fontSize: "0.95rem",
+                            borderLeft: "2px solid white",
+                          }}
+                        >
                           {getPlayerName(pid)}
                         </th>
                       ))}
                     </tr>
                     <tr>
-                      <th></th>
-                      <th></th>
-                      {selectedPlayerIds.map((pid) => (
-                        <>
-                          <th key={`g-${pid}`} style={{ fontSize: "0.75rem" }}>그로스</th>
-                          <th key={`n-${pid}`} style={{ fontSize: "0.75rem" }}>넷</th>
-                          <th key={`r-${pid}`} style={{ fontSize: "0.75rem" }}>순위</th>
-                        </>
-                      ))}
+                      {selectedPlayerIds.map((pid, idx) => {
+                        const lightBg = `${PLAYER_COLORS[idx]}25`;
+                        return (
+                          <React.Fragment key={`sub-${pid}`}>
+                            <th style={{ fontSize: "0.75rem", background: lightBg, color: "#333", borderLeft: "2px solid white" }}>그로스</th>
+                            <th style={{ fontSize: "0.75rem", background: lightBg, color: "#333" }}>넷</th>
+                            <th style={{ fontSize: "0.75rem", background: lightBg, color: "#333" }}>순위</th>
+                          </React.Fragment>
+                        );
+                      })}
                     </tr>
                   </thead>
                   <tbody>
                     {[...filteredGames].reverse().map((game) => {
-                      // 이 경기에서 선택한 선수들 중 1위 찾기
                       const gpList = selectedPlayerIds.map((pid) =>
                         (game.gamePlayers || []).find((gp) => gp.playerId === pid)
                       );
@@ -845,13 +854,14 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                             );
                             const isWinner =
                               gp?.rank != null && gp.rank === minRank && gp.rank === 1;
+                            const cellBg = idx % 2 === 1 ? "#f8f9fa" : "transparent";
                             return (
-                              <>
-                                <td key={`g-${game.id}-${pid}`}>{gp?.grossScore || "-"}</td>
-                                <td key={`n-${game.id}-${pid}`}>
+                              <React.Fragment key={`data-${game.id}-${pid}`}>
+                                <td style={{ background: cellBg, borderLeft: `2px solid ${PLAYER_COLORS[idx]}20` }}>{gp?.grossScore || "-"}</td>
+                                <td style={{ background: cellBg }}>
                                   <strong>{gp?.netScore || "-"}</strong>
                                 </td>
-                                <td key={`r-${game.id}-${pid}`}>
+                                <td style={{ background: cellBg }}>
                                   {gp?.rank ? (
                                     <span
                                       className={`rank-badge rank-${
@@ -866,7 +876,7 @@ export default function StatsPage({ players, useLocalStorage, showToast }: Props
                                   )}
                                   {isWinner && " 🏆"}
                                 </td>
-                              </>
+                              </React.Fragment>
                             );
                           })}
                         </tr>
